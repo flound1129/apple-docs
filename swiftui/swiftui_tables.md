@@ -1,0 +1,60 @@
+# Tables
+
+Display selectable, sortable data arranged in rows and columns.
+
+## Overview
+
+Use a table to display multiple values across a collection of elements. Each element in the collection appears in a different row of the table, while each value for a given element appears in a different column. Narrow displays may adapt to show only the first column of the table.
+
+![None]
+
+When you create a table, you provide a collection of elements, and then tell the table how to find the needed value for each column. In simple cases, SwiftUI infers the element for each row, but you can also specify the row elements explicitly in more complex scenarios. With a small amount of additional configuration, you can also make the items in the table selectable, and the columns sortable.
+
+Like a [List](/documentation/swiftui/list), a table includes implicit vertical scrolling that you can configure using the view modifiers described in [Scroll views](/documentation/swiftui/scroll-views). For design guidance, see [Lists and tables](/design/Human-Interface-Guidelines/lists-and-tables) in the Human Interface Guidelines.
+
+### Creating a table
+
+- [Building a great Mac app with SwiftUI](/documentation/swiftui/building-a-great-mac-app-with-swiftui): Create engaging SwiftUI Mac apps by incorporating side bars, tables, toolbars, and several other popular user interface elements.
+- [Table](/documentation/swiftui/table): A container that presents rows of data arranged in one or more columns, optionally providing the ability to select one or more members.
+- [tableStyle(_:)](/documentation/swiftui/view/tablestyle(_:)): Sets the style for tables within this view.
+
+### Creating columns
+
+- [TableColumn](/documentation/swiftui/tablecolumn): A column that displays a view for each row in a table.
+- [TableColumnContent](/documentation/swiftui/tablecolumncontent): A type used to represent columns within a table.
+- [TableColumnAlignment](/documentation/swiftui/tablecolumnalignment): Describes the alignment of the content of a table column.
+- [TableColumnBuilder](/documentation/swiftui/tablecolumnbuilder): A result builder that creates table column content from closures.
+- [TableColumnForEach](/documentation/swiftui/tablecolumnforeach): A structure that computes columns on demand from an underlying collection of identified data.
+
+### Customizing columns
+
+- [tableColumnHeaders(_:)](/documentation/swiftui/view/tablecolumnheaders(_:)): Controls the visibility of a `Table`’s column header views.
+- [TableColumnCustomization](/documentation/swiftui/tablecolumncustomization): A representation of the state of the columns in a table.
+- [TableColumnCustomizationBehavior](/documentation/swiftui/tablecolumncustomizationbehavior): A set of customization behaviors of a column that a table can offer to a user.
+
+### Creating rows
+
+- [TableRow](/documentation/swiftui/tablerow): A row that represents a data value in a table.
+- [TableRowContent](/documentation/swiftui/tablerowcontent): A type used to represent table rows.
+- [TableHeaderRowContent](/documentation/swiftui/tableheaderrowcontent): A table row that displays a single view instead of columned content.
+- [TupleTableRowContent](/documentation/swiftui/tupletablerowcontent): A type of table column content that creates table rows created from a Swift tuple of table rows.
+- [TableForEachContent](/documentation/swiftui/tableforeachcontent): A type of table row content that creates table rows created by iterating over a collection.
+- [EmptyTableRowContent](/documentation/swiftui/emptytablerowcontent): A table row content that doesn’t produce any rows.
+- [DynamicTableRowContent](/documentation/swiftui/dynamictablerowcontent): A type of table row content that generates table rows from an underlying collection of data.
+- [TableRowBuilder](/documentation/swiftui/tablerowbuilder): A result builder that creates table row content from closures.
+
+### Adding progressive disclosure
+
+- [DisclosureTableRow](/documentation/swiftui/disclosuretablerow): A kind of table row that shows or hides additional rows based on the state of a disclosure control.
+- [TableOutlineGroupContent](/documentation/swiftui/tableoutlinegroupcontent): An opaque table row type created by a table’s hierarchical initializers.
+
+## See Also
+
+### View layout
+
+- [Layout fundamentals](/documentation/swiftui/layout-fundamentals): Arrange views inside built-in layout containers like stacks and grids.
+- [Layout adjustments](/documentation/swiftui/layout-adjustments): Make fine adjustments to alignment, spacing, padding, and other layout parameters.
+- [Custom layout](/documentation/swiftui/custom-layout): Place views in custom arrangements and create animated transitions between layout types.
+- [Lists](/documentation/swiftui/lists): Display a structured, scrollable column of information.
+- [View groupings](/documentation/swiftui/view-groupings): Present views in different kinds of purpose-driven containers, like forms or control groups.
+- [Scroll views](/documentation/swiftui/scroll-views): Enable people to scroll to content that doesn’t fit in the current display.

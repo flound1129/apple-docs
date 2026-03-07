@@ -1,0 +1,72 @@
+# Deprecated
+
+### Deprecated Functions
+
+- [async(priority:operation:)](/documentation/swift/async(priority:operation:)-2y0dc): Deprecated, available only for source compatibility reasons.
+- [async(priority:operation:)](/documentation/swift/async(priority:operation:)-684z0): Deprecated, available only for source compatibility reasons.
+- [asyncDetached(priority:operation:)](/documentation/swift/asyncdetached(priority:operation:)-6wbk6): Deprecated, available only for source compatibility reasons.
+- [asyncDetached(priority:operation:)](/documentation/swift/asyncdetached(priority:operation:)-79mp7): Deprecated, available only for source compatibility reasons.
+- [asyncDetached(priority:operation:)](/documentation/swift/asyncdetached(priority:operation:)-79mp7): Deprecated, available only for source compatibility reasons.
+- [detach(priority:operation:)](/documentation/swift/detach(priority:operation:)-2h9ty): Deprecated, available only for source compatibility reasons.
+- [detach(priority:operation:)](/documentation/swift/detach(priority:operation:)-4948v): Deprecated, available only for source compatibility reasons.
+
+### Deprecated Type Aliases
+
+- [ArrayLiteralConvertible](/documentation/swift/arrayliteralconvertible)
+- [BidirectionalIndexable](/documentation/swift/bidirectionalindexable)
+- [BidirectionalSlice](/documentation/swift/bidirectionalslice)
+- [BooleanLiteralConvertible](/documentation/swift/booleanliteralconvertible)
+- [ClosedRangeIndex](/documentation/swift/closedrangeindex)
+- [CustomPlaygroundQuickLookable](/documentation/swift/customplaygroundquicklookable): A type that explicitly supplies its own playground Quick Look.
+- [DefaultBidirectionalIndices](/documentation/swift/defaultbidirectionalindices)
+- [DefaultRandomAccessIndices](/documentation/swift/defaultrandomaccessindices)
+- [DictionaryIterator](/documentation/swift/dictionaryiterator)
+- [DictionaryLiteralConvertible](/documentation/swift/dictionaryliteralconvertible)
+- [EmptyIterator](/documentation/swift/emptyiterator)
+- [ExtendedGraphemeClusterLiteralConvertible](/documentation/swift/extendedgraphemeclusterliteralconvertible)
+- [FlattenBidirectionalCollectionIndex](/documentation/swift/flattenbidirectionalcollectionindex)
+- [FlattenBidirectionalCollection](/documentation/swift/flattenbidirectionalcollection)
+- [FlattenCollectionIndex](/documentation/swift/flattencollectionindex)
+- [FloatLiteralConvertible](/documentation/swift/floatliteralconvertible)
+- [IndexableBase](/documentation/swift/indexablebase)
+- [Indexable](/documentation/swift/indexable)
+- [IntegerLiteralConvertible](/documentation/swift/integerliteralconvertible)
+- [IteratorOverOne](/documentation/swift/iteratoroverone)
+- [JoinedIterator](/documentation/swift/joinediterator)
+- [LazyBidirectionalCollection](/documentation/swift/lazybidirectionalcollection)
+- [LazyDropWhileBidirectionalCollection](/documentation/swift/lazydropwhilebidirectionalcollection)
+- [LazyDropWhileIndex](/documentation/swift/lazydropwhileindex)
+- [LazyDropWhileIterator](/documentation/swift/lazydropwhileiterator)
+- [LazyFilterBidirectionalCollection](/documentation/swift/lazyfilterbidirectionalcollection)
+- [LazyFilterIndex](/documentation/swift/lazyfilterindex)
+- [LazyFilterIterator](/documentation/swift/lazyfilteriterator)
+- [LazyMapBidirectionalCollection](/documentation/swift/lazymapbidirectionalcollection)
+- [LazyMapIterator](/documentation/swift/lazymapiterator)
+- [LazyMapRandomAccessCollection](/documentation/swift/lazymaprandomaccesscollection)
+- [LazyPrefixWhileBidirectionalCollection](/documentation/swift/lazyprefixwhilebidirectionalcollection)
+- [LazyPrefixWhileIndex](/documentation/swift/lazyprefixwhileindex)
+- [LazyPrefixWhileIterator](/documentation/swift/lazyprefixwhileiterator)
+- [LazyRandomAccessCollection](/documentation/swift/lazyrandomaccesscollection)
+- [MutableBidirectionalSlice](/documentation/swift/mutablebidirectionalslice)
+- [MutableIndexable](/documentation/swift/mutableindexable)
+- [MutableRandomAccessSlice](/documentation/swift/mutablerandomaccessslice)
+- [MutableRangeReplaceableBidirectionalSlice](/documentation/swift/mutablerangereplaceablebidirectionalslice)
+- [MutableRangeReplaceableRandomAccessSlice](/documentation/swift/mutablerangereplaceablerandomaccessslice)
+- [MutableRangeReplaceableSlice](/documentation/swift/mutablerangereplaceableslice)
+- [MutableSlice](/documentation/swift/mutableslice)
+- [NilLiteralConvertible](/documentation/swift/nilliteralconvertible)
+- [RandomAccessIndexable](/documentation/swift/randomaccessindexable)
+- [RandomAccessSlice](/documentation/swift/randomaccessslice)
+- [RangeReplaceableBidirectionalSlice](/documentation/swift/rangereplaceablebidirectionalslice)
+- [RangeReplaceableIndexable](/documentation/swift/rangereplaceableindexable)
+- [RangeReplaceableRandomAccessSlice](/documentation/swift/rangereplaceablerandomaccessslice)
+- [RangeReplaceableSlice](/documentation/swift/rangereplaceableslice)
+- [ReversedIndex](/documentation/swift/reversedindex)
+- [ReversedRandomAccessCollection](/documentation/swift/reversedrandomaccesscollection)
+- [StringInterpolationConvertible](/documentation/swift/stringinterpolationconvertible)
+- [StringLiteralConvertible](/documentation/swift/stringliteralconvertible)
+- [UnicodeScalarLiteralConvertible](/documentation/swift/unicodescalarliteralconvertible)
+- [UnsafeBufferPointerIterator](/documentation/swift/unsafebufferpointeriterator)
+- [UnsafeMutableRawBufferPointerIterator](/documentation/swift/unsafemutablerawbufferpointeriterator)
+- [UnsafeRawBufferPointerIterator](/documentation/swift/unsaferawbufferpointeriterator)
+- [Zip2Iterator](/documentation/swift/zip2iterator)
