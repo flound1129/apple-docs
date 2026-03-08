@@ -356,7 +356,8 @@ def doc_path_to_filepath(doc_path, output_subdir):
     return SCRIPT_DIR / output_subdir / filename
 
 
-def crawl_and_convert(root_path, output_subdir, max_depth=2, etags=None):
+def crawl_and_convert(root_path, output_subdir, max_depth=2, etags=None,
+                      delete=False):
     """Crawl documentation starting from root_path and convert all pages.
 
     Uses ETags for conditional requests. Only pages that have changed
@@ -434,15 +435,22 @@ def crawl_and_convert(root_path, output_subdir, max_depth=2, etags=None):
 
         time.sleep(0.2)
 
-    # Prune files that no longer exist in the doc tree
-    pruned = 0
+    # Check for files that no longer exist in the doc tree
+    stale = []
     for existing in out_dir.glob("*.md"):
         if existing not in expected_files:
-            existing.unlink()
-            pruned += 1
-            print(f"    Pruned removed page: {existing.name}")
+            stale.append(existing)
 
-    return updated, skipped, errors, pruned
+    deleted = 0
+    for f in stale:
+        if delete:
+            f.unlink()
+            deleted += 1
+            print(f"    Deleted removed page: {f.name}")
+        else:
+            print(f"    Warning: {f.name} no longer in doc tree (use --delete to remove)")
+
+    return updated, skipped, errors, deleted, len(stale)
 
 
 def git_commit_and_push(push=True):
@@ -486,6 +494,7 @@ examples:
   ./update.py --no-push             # commit but don't push
   ./update.py --no-commit           # just fetch, no git operations
   ./update.py --full                # ignore ETags, re-fetch everything
+  ./update.py --delete              # auto-delete stale files
 """,
     )
     parser.add_argument(
@@ -510,6 +519,11 @@ examples:
         "--full", action="store_true",
         help="Ignore cached ETags and re-fetch everything",
     )
+    parser.add_argument(
+        "--delete", action="store_true",
+        help="Delete local .md files for pages no longer in the doc tree "
+             "(default: warn only)",
+    )
     args = parser.parse_args()
 
     # Load or reset ETags
@@ -529,12 +543,17 @@ examples:
         print(f"\n{'='*60}")
         print(f"Crawling: {target} (depth={args.depth})")
         print(f"{'='*60}")
-        updated, skipped, errors, pruned = crawl_and_convert(
+        updated, skipped, errors, deleted, stale = crawl_and_convert(
             f"/documentation/{target}", target,
-            max_depth=args.depth, etags=etags,
+            max_depth=args.depth, etags=etags, delete=args.delete,
         )
-        print(f"\n  {target}: {updated} updated, {skipped} unchanged, "
-              f"{errors} errors, {pruned} pruned")
+        summary = (f"  {target}: {updated} updated, {skipped} unchanged, "
+                   f"{errors} errors")
+        if stale:
+            summary += f", {stale} stale"
+            if args.delete:
+                summary += " (deleted)"
+        print(f"\n{summary}")
 
     # Always save ETags (even if we don't commit)
     save_etags(etags)
