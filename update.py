@@ -2,18 +2,21 @@
 """
 Fetch Apple Developer docs for Swift and SwiftUI and convert to Markdown.
 
+Uses ETags for incremental updates — only re-fetches pages that have
+changed on Apple's servers since the last run.
+
 Usage:
     ./update.py                  # default depth 2, both swift and swiftui
     ./update.py --depth 3        # crawl 3 levels deep
     ./update.py --depth 1        # articles only (no type overviews)
     ./update.py --targets swift  # only fetch Swift docs
     ./update.py --no-push        # don't push to remote after updating
+    ./update.py --full           # ignore cached ETags, re-fetch everything
 """
 
 import argparse
 import json
 import os
-import shutil
 import subprocess
 import sys
 import time
@@ -23,22 +26,52 @@ from pathlib import Path
 
 BASE_URL = "https://developer.apple.com/tutorials/data"
 SCRIPT_DIR = Path(__file__).resolve().parent
+ETAGS_FILE = SCRIPT_DIR / ".etags.json"
 
 
-def fetch_json(path):
-    """Fetch a documentation JSON file from Apple's API."""
+def load_etags():
+    """Load saved ETags from disk."""
+    if ETAGS_FILE.exists():
+        return json.loads(ETAGS_FILE.read_text())
+    return {}
+
+
+def save_etags(etags):
+    """Save ETags to disk."""
+    ETAGS_FILE.write_text(json.dumps(etags, indent=2) + "\n")
+
+
+def fetch_json(path, etags):
+    """Fetch a documentation JSON file from Apple's API.
+
+    Returns (data, changed) where changed is False if the server
+    returned 304 Not Modified.
+    """
     url = f"{BASE_URL}{path}.json"
-    print(f"  Fetching: {url}")
+    headers = {"User-Agent": "Mozilla/5.0"}
+
+    cached_etag = etags.get(path)
+    if cached_etag:
+        headers["If-None-Match"] = cached_etag
+
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req, timeout=30) as resp:
-            return json.loads(resp.read())
+            etag = resp.headers.get("ETag")
+            if etag:
+                etags[path] = etag
+            data = json.loads(resp.read())
+            print(f"  Fetching: {path} -> updated")
+            return data, True
     except urllib.error.HTTPError as e:
-        print(f"    HTTP {e.code} for {url}")
-        return None
+        if e.code == 304:
+            print(f"  Fetching: {path} -> not modified")
+            return None, False
+        print(f"  Fetching: {path} -> HTTP {e.code}")
+        return None, None  # actual error
     except Exception as e:
-        print(f"    Error: {e}")
-        return None
+        print(f"  Fetching: {path} -> Error: {e}")
+        return None, None
 
 
 # ---------------------------------------------------------------------------
@@ -316,18 +349,32 @@ def collect_topic_paths(data, base_path, skip_members=False):
     return paths
 
 
-def crawl_and_convert(root_path, output_subdir, max_depth=2):
-    """Crawl documentation starting from root_path and convert all pages."""
-    out_dir = SCRIPT_DIR / output_subdir
+def doc_path_to_filepath(doc_path, output_subdir):
+    """Convert a doc API path to a local .md file path."""
+    rel = doc_path.replace("/documentation/", "").strip("/")
+    filename = rel.replace("/", "_") + ".md"
+    return SCRIPT_DIR / output_subdir / filename
 
-    # Clean existing docs for a fresh update
-    if out_dir.exists():
-        shutil.rmtree(out_dir)
-    out_dir.mkdir(parents=True)
+
+def crawl_and_convert(root_path, output_subdir, max_depth=2, etags=None):
+    """Crawl documentation starting from root_path and convert all pages.
+
+    Uses ETags for conditional requests. Only pages that have changed
+    are re-converted. Pages that haven't changed are left as-is.
+    """
+    out_dir = SCRIPT_DIR / output_subdir
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    if etags is None:
+        etags = {}
 
     visited = set()
     queue = [(root_path, 0)]
-    total = 0
+    updated = 0
+    skipped = 0
+    errors = 0
+    # Track which files should exist at this depth so we can prune removed pages
+    expected_files = set()
 
     while queue:
         doc_path, depth = queue.pop(0)
@@ -335,32 +382,67 @@ def crawl_and_convert(root_path, output_subdir, max_depth=2):
             continue
         visited.add(doc_path)
 
-        data = fetch_json(doc_path)
-        if not data:
+        filepath = doc_path_to_filepath(doc_path, output_subdir)
+        expected_files.add(filepath)
+
+        data, changed = fetch_json(doc_path, etags)
+
+        if changed is None:
+            # Actual error (not 304)
+            errors += 1
             time.sleep(0.3)
             continue
 
-        md = convert_doc_to_markdown(data)
-        if md:
-            rel = doc_path.replace("/documentation/", "").strip("/")
-            filename = rel.replace("/", "_") + ".md"
-            filepath = out_dir / filename
-            filepath.write_text(md, encoding="utf-8")
-            total += 1
-            print(f"    -> Saved: {filepath}")
+        if changed:
+            # Content changed — re-convert
+            md = convert_doc_to_markdown(data)
+            if md:
+                filepath.write_text(md, encoding="utf-8")
+                updated += 1
 
-        if depth < max_depth:
-            skip = depth >= 1
-            child_paths = collect_topic_paths(data, doc_path, skip_members=skip)
-            for cp in child_paths:
-                root_prefix = root_path.rstrip("/").split("/")[2]
-                if f"/documentation/{root_prefix}" in cp or cp.startswith(doc_path):
-                    if cp not in visited:
-                        queue.append((cp, depth + 1))
+            # Need data to discover children
+            if depth < max_depth:
+                skip = depth >= 1
+                child_paths = collect_topic_paths(data, doc_path, skip_members=skip)
+                for cp in child_paths:
+                    root_prefix = root_path.rstrip("/").split("/")[2]
+                    if f"/documentation/{root_prefix}" in cp or cp.startswith(doc_path):
+                        if cp not in visited:
+                            queue.append((cp, depth + 1))
+        else:
+            # 304 — not modified, but we still need to crawl children
+            # Re-read existing file to get topic structure (from cached data)
+            skipped += 1
+            if depth < max_depth:
+                # We need the JSON to discover children, so fetch without ETag
+                req = urllib.request.Request(
+                    f"{BASE_URL}{doc_path}.json",
+                    headers={"User-Agent": "Mozilla/5.0"},
+                )
+                try:
+                    with urllib.request.urlopen(req, timeout=30) as resp:
+                        data = json.loads(resp.read())
+                    skip = depth >= 1
+                    child_paths = collect_topic_paths(data, doc_path, skip_members=skip)
+                    for cp in child_paths:
+                        root_prefix = root_path.rstrip("/").split("/")[2]
+                        if f"/documentation/{root_prefix}" in cp or cp.startswith(doc_path):
+                            if cp not in visited:
+                                queue.append((cp, depth + 1))
+                except Exception:
+                    pass  # Can't discover children, not fatal
 
         time.sleep(0.2)
 
-    return total
+    # Prune files that no longer exist in the doc tree
+    pruned = 0
+    for existing in out_dir.glob("*.md"):
+        if existing not in expected_files:
+            existing.unlink()
+            pruned += 1
+            print(f"    Pruned removed page: {existing.name}")
+
+    return updated, skipped, errors, pruned
 
 
 def git_commit_and_push(push=True):
@@ -387,7 +469,7 @@ def git_commit_and_push(push=True):
         subprocess.run(["git", "push"], check=True)
         print("Pushed.")
     else:
-        print("\nCommitted locally (use --no-push to skip push).")
+        print("\nCommitted locally (--no-push).")
 
 
 def main():
@@ -403,6 +485,7 @@ examples:
   ./update.py --targets swift       # only fetch Swift docs
   ./update.py --no-push             # commit but don't push
   ./update.py --no-commit           # just fetch, no git operations
+  ./update.py --full                # ignore ETags, re-fetch everything
 """,
     )
     parser.add_argument(
@@ -423,22 +506,38 @@ examples:
         "--no-commit", action="store_true",
         help="Just fetch docs, skip git commit and push",
     )
+    parser.add_argument(
+        "--full", action="store_true",
+        help="Ignore cached ETags and re-fetch everything",
+    )
     args = parser.parse_args()
+
+    # Load or reset ETags
+    if args.full:
+        etags = {}
+    else:
+        etags = load_etags()
 
     print("=" * 60)
     print("Apple Developer Documentation -> Markdown")
     print(f"  Targets: {', '.join(args.targets)}")
     print(f"  Depth:   {args.depth}")
+    print(f"  Mode:    {'full refresh' if args.full else 'incremental (ETag)'}")
     print("=" * 60)
 
     for target in args.targets:
         print(f"\n{'='*60}")
         print(f"Crawling: {target} (depth={args.depth})")
         print(f"{'='*60}")
-        count = crawl_and_convert(
-            f"/documentation/{target}", target, max_depth=args.depth,
+        updated, skipped, errors, pruned = crawl_and_convert(
+            f"/documentation/{target}", target,
+            max_depth=args.depth, etags=etags,
         )
-        print(f"\nDone! Saved {count} pages for {target}.")
+        print(f"\n  {target}: {updated} updated, {skipped} unchanged, "
+              f"{errors} errors, {pruned} pruned")
+
+    # Always save ETags (even if we don't commit)
+    save_etags(etags)
 
     if not args.no_commit:
         git_commit_and_push(push=not args.no_push)
